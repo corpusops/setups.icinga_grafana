@@ -1,0 +1,15 @@
+- include_role: {name: corpusops.roles/docker_compose_service}
+  vars:
+    _docker_compose_service:
+      project: "{{grafana_compose_project}}"
+      state: "{{grafana_stopped_state}}"
+      working_directory: "{{grafana_hostdir}}"
+      stdout: "{{grafana_stdout}}"
+      stderr: "{{grafana_stderr}}"
+  tags: [service_stop]
+- shell: |-
+    set -ex
+    if [ ! -e "{{grafana_hostdir}}/{{grafana_compose_files[0]}}" ];then exit 0;fi
+    cd {{grafana_hostdir}}
+    docker-compose down
+  tags: [service_dockercompose_stop]

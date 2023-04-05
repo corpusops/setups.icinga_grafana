@@ -1,0 +1,96 @@
+---
+grafana_deployment_version: "1"
+grafana_icingaplugin_version: "2.0.1"
+grafana_icingaplugin_dir: "/usr/share/icingaweb2/modules"
+grafana_version: "1.2.2"
+grafana_domain: grafana.foo.bar
+grafana_images_influx: "influxdb:1.8-alpine"
+grafana_images_grafana: "grafana/grafana"
+grafana_extra_hosts: {}
+grafana_basedir: /srv/docker/grafana
+grafana_data_volume: "{{grafana_basedir}}/data"
+grafana_hostdir: "{{grafana_basedir}}/current"
+grafana_versioned_hostdir: "{{grafana_basedir}}/{{grafana_deployment_version}}"
+grafana_volumes:
+- "{{grafana_hostdir}}"
+grafana_cfg_version: "{% set p = grafana_version.split('.') %}{% set v = '{p[0]}.{p[1]}.0'.format(p=p) %}{{v}}"
+grafana_vversion: "v{{grafana_version}}"
+grafana_network: 172.34.0
+grafana_password: xxxtR7487913189781az
+#
+grafana_compose_project: "{{grafana_basedir|copsf_basename}}"
+# do not change this unless you use external database
+grafana_compose_files: [docker-compose.yml]
+grafana_docker_dot_env: "{{grafana_docker_dot_env_default}}"
+grafana_image: "grafana/grafana"
+grafana_influx_image: "influxdb:1.8-alpine"
+grafana_renderer_image: grafana/grafana-image-renderer
+grafana_docker_dot_env_common_default: |-
+  DOCKER_BUILDKIT=1
+  COMPOSE_DOCKER_CLI_BUILD=1
+  BUILDKIT_PROGRESS=plain
+  BUILDKIT_INLINE_CACHE=1
+  #
+  GRAFANA_RENDERER_IMAGE={{grafana_renderer_image}}
+  GRAFANA_LISTEN_INT_IF={{grafana_listen_int_if}}
+  GRAFANA_LISTEN_IF={{grafana_listen_if}}
+  GRAFANA_NETWORK={{grafana_network}}
+  GRAFANA_SYSLOG_NET={{grafana_syslog_net}}
+  GRAFANA_IMAGE={{grafana_images_grafana}}
+  INFLUXDB_IMAGE={{grafana_images_influx}}
+  #
+  COMPOSE_PROJECT_NAME={{grafana_compose_project}}
+  COMPOSE_FILE={{grafana_compose_files|join(':')}}
+  GRAFANA_RESTART_POLICY={{grafana_restart_policy}}
+  #
+  GRAFANA_ADMIN_PASSWORD={{grafana_admin_user}}
+  GRAFANA_ADMIN_USER={{grafana_admin_password}}
+  #
+  GF_SECURITY_ADMIN_USER={{grafana_admin_user}}
+  GF_SECURITY_ADMIN_PASSWORD={{grafana_admin_password}}
+  GF_INSTALL_PLUGINS=
+  #
+  INFLUXDB_DB=influx
+  INFLUXDB_ADMIN_USER={{grafana_admin_user}}
+  INFLUXDB_ADMIN_PASSWORD={{grafana_admin_password}}
+  GF_RENDERING_SERVER_URL=http://renderer:8081/render
+  GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+  GF_LOG_FILTERS=rendering:debug
+  {{ grafana_docker_dot_env_extra }}
+grafana_docker_dot_env_extra: ""
+grafana_docker_dot_env: |-
+  # ansible
+  {{grafana_docker_dot_env_common_default}}
+grafana_syslog_net: 127.0.0.1:1514
+grafana_admin_user: admin
+grafana_admin_password: "{{grafana_password}}"
+grafana_real_ip_from: "10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 {{grafana_network}}.0/12"
+grafana_restart_policy: unless-stopped
+grafana_listen_if: 0.0.0.0
+grafana_listen_int_if: 127.0.0.1
+grafana_dcompose: docker-compose -p {{grafana_compose_project}}
+grafana_stopped_state: stopped
+grafana_started_state: started
+grafana_stdout: /dev/null
+grafana_stderr: /dev/null
+grafana_force_sync_ssh_user: null
+grafana_sync_ssh_user: ""
+grafana_sshargs: >-
+  {% set k = hostvars[inventory_hostname].get(
+                'ansible_ssh_private_key_file', '') %}
+  {% if k%}-o IdentityFile={{k}} -o IdentitiesOnly=yes{%endif%}
+  {% if (
+      hostvars[inventory_hostname].ansible_connection|default('ssh')
+     ) not in [ 'smart', 'local'] %}
+  {{ hostvars[inventory_hostname].ssh_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_common_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_extra_args | default('') }}
+  {% endif %}
+  {% if((grafana_force_sync_ssh_user) or
+        (grafana_sync_ssh_user and (grafana_force_sync_ssh_user == True))
+    )%}
+  {% set user = grafana_sync_ssh_user or ansible_user or '' %}
+  {% if user %}-l {{user}}{% endif %}
+  {% endif %}
+grafana_code_rsync_opts: ["-aAHzv"]

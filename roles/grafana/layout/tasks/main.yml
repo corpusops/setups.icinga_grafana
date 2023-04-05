@@ -1,0 +1,22 @@
+- set_fact:
+    grafana_host_dirs: |
+        {% set directories = [] %}
+        {% for grafana_volume in grafana_volumes %}
+        {% set d = grafana_volume.split(':')[0] %}
+        {% set _ = directories.append(d) %}
+        {% endfor %}
+        {% set _ = directories.append(grafana_data_volume) %}
+        {{ directories | to_json }}
+- file:
+    path: "{{item}}"
+    mode: "0711"
+    state: directory
+  with_items: "{{grafana_host_dirs}}"
+- file:
+    state: directory
+    path: "{{grafana_versioned_hostdir}}"
+- file:
+    state: link
+    force: true
+    src: "{{grafana_versioned_hostdir}}"
+    path: "{{grafana_hostdir}}"

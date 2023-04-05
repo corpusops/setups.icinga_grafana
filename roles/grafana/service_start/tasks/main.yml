@@ -1,0 +1,13 @@
+- include_role: {name: corpusops.roles/docker_compose_service}
+  vars:
+    _docker_compose_service:
+      project: "{{grafana_compose_project}}"
+      state: "{{grafana_started_state}}"
+      working_directory: "{{grafana_hostdir}}"
+      stdout: "{{grafana_stdout}}"
+      stderr: "{{grafana_stderr}}"
+- shell: |-
+    set -ex
+    cd "{{grafana_hostdir}}"
+    docker-compose -p {{grafana_compose_project}} up -d
+  tags: [grafana_restart_services]

@@ -1,0 +1,5 @@
+---
+- include_role: {name: grafana/layout}
+  tags: [grafana_layout]
+- include_role: {name: grafana/configs}
+  tags: [grafana_configs]

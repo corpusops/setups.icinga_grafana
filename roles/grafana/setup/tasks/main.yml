@@ -1,0 +1,12 @@
+---
+- include_role: {name: grafana/vars}
+- include_role: {name: corpusops.roles/services_virt_docker}
+  tags: [docker_setup]
+- include_role: {name: grafana/service_stop}
+  tags: [service, grafana_service, grafana_service_stop]
+- include_role: {name: grafana/configure}
+  tags: [configs, grafana_configure]
+- include_role: {name: grafana/service_start}
+  tags: [service, grafana_service, grafana_service_start]
+- include_role: {name: grafana/post}
+  tags: [post]
